@@ -1,13 +1,30 @@
 #!/bin/bash
 
+# Fungsi untuk menangani sinyal SIGINT (Ctrl+C)
+function cleanup {
+    echo "Instalasi RANIS dibatalkan."
+    echo "Menghapus folder /opt/ranis..."
+    sudo rm -rf /opt/ranis
+    exit 1
+}
+
+# Menangkap sinyal SIGINT (Ctrl+C)
+trap cleanup SIGINT
+
 # Step 1: Download file zip dari repository RANIS
 echo "Downloading RANIS from GitHub..."
-wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip
+wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip || {
+    echo "Gagal mengunduh file RANIS dari GitHub. Instalasi dibatalkan."
+    cleanup
+}
 
 # Step 2: Ekstrak file zip ke folder /opt/ranis
 echo "Extracting files to /opt/ranis..."
 sudo mkdir -p /opt/ranis
-sudo unzip /tmp/ranis.zip -d /opt/ranis
+sudo unzip /tmp/ranis.zip -d /opt/ranis || {
+    echo "Gagal mengekstrak file RANIS. Instalasi dibatalkan."
+    cleanup
+}
 
 # Step 3: Buat file .env dan minta pengguna untuk mengisi nilai
 echo "Creating .env file..."
@@ -36,12 +53,15 @@ URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
 
 # Pesan yang akan dikirim
 MESSAGE="Silakan ketikkan angka berikut pada terminal untuk memverifikasi: $RANDOM_NUMBER"
-curl -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE"
+curl -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE" || {
+    echo "Gagal mengirim pesan ke bot Telegram. Instalasi dibatalkan."
+    cleanup
+}
 
 echo "Memeriksa apakah bot Telegram berjalan..."
 echo "Menunggu konfirmasi..."
 
-# Loop sampai angka yang dikirimkan benar
+# Loop sampai angka yang dikirimkan benar atau pengguna mengakhiri dengan Ctrl+C
 while true; do
     read -p "Masukkan angka yang Anda terima di Telegram: " USER_INPUT
     if [[ "$USER_INPUT" == "$RANDOM_NUMBER" ]]; then
@@ -54,13 +74,18 @@ done
 
 # Step 5: Install aplikasi yang dibutuhkan
 echo "Installing inotify-tools..."
-sudo apt update
-sudo apt install -y inotify-tools
+sudo apt update && sudo apt install -y inotify-tools || {
+    echo "Gagal menginstal inotify-tools. Instalasi dibatalkan."
+    cleanup
+}
 
 # Install requirements Python dari RANIS
 echo "Installing Python requirements..."
 sudo apt install -y python3-pip
-sudo pip3 install -r /opt/ranis/RANIS-latest/requirements.txt
+sudo pip3 install -r /opt/ranis/RANIS-latest/requirements.txt || {
+    echo "Gagal menginstal Python requirements. Instalasi dibatalkan."
+    cleanup
+}
 
 # Step 6: Membuat service untuk monitor_changes.sh
 echo "Creating systemd service..."
