@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Function to prompt and validate input
+prompt_input() {
+    local var_name="$1"
+    local prompt_message="$2"
+    local error_message="$3"
+
+    while true; do
+        read -p "$prompt_message: " input_value
+        if [ -z "$input_value" ]; then
+            echo "$error_message. Instalasi dibatalkan."
+            sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis jika instalasi dibatalkan
+            exit 1
+        else
+            eval "$var_name=\"$input_value\""  # Assign input value to variable name
+            break
+        fi
+    done
+}
+
 # Step 1: Download file zip dari repository RANIS
 echo "Downloading RANIS from GitHub..."
 wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip
@@ -14,28 +33,13 @@ echo "Creating .env file..."
 echo "Masukkan nilai yang diperlukan untuk .env:"
 
 # Meminta nilai WATCH_DIR
-read -p "WATCH_DIR (direktori untuk dipantau): " WATCH_DIR
-if [ -z "$WATCH_DIR" ]; then
-    echo "WATCH_DIR tidak boleh kosong. Instalasi dibatalkan."
-    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis jika instalasi dibatalkan
-    exit 1
-fi
+prompt_input WATCH_DIR "WATCH_DIR (direktori untuk dipantau)" "WATCH_DIR tidak boleh kosong"
 
 # Meminta nilai TELEGRAM_TOKEN
-read -p "TELEGRAM_TOKEN: " TELEGRAM_TOKEN
-if [ -z "$TELEGRAM_TOKEN" ]; then
-    echo "TELEGRAM_TOKEN tidak boleh kosong. Instalasi dibatalkan."
-    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis jika instalasi dibatalkan
-    exit 1
-fi
+prompt_input TELEGRAM_TOKEN "TELEGRAM_TOKEN" "TELEGRAM_TOKEN tidak boleh kosong"
 
 # Meminta nilai CHAT_ID
-read -p "CHAT_ID: " CHAT_ID
-if [ -z "$CHAT_ID" ]; then
-    echo "CHAT_ID tidak boleh kosong. Instalasi dibatalkan."
-    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis jika instalasi dibatalkan
-    exit 1
-fi
+prompt_input CHAT_ID "CHAT_ID" "CHAT_ID tidak boleh kosong"
 
 # Buat file .env
 echo "WATCH_DIR=\"$WATCH_DIR\"" > /opt/ranis/RANIS-latest/.env
