@@ -27,3 +27,16 @@ Pastikan untuk mengonfigurasi file `.env` dengan token bot Telegram (`TELEGRAM_T
 3. Jalankan `monitor_changes.sh` untuk memulai monitoring perubahan file dan folder.
 
 RANIS dibuat untuk memenuhi kebutuhan pemantauan keamanan yang efektif dan responsif dalam lingkungan sistem yang dinamis dan rentan terhadap serangan cyber.
+
+# Panduan Instalasi RANIS
+
+Untuk menginstal RANIS, Anda dapat menggunakan skrip instalasi yang disediakan. Berikut langkah-langkahnya:
+
+1. **Buka Terminal**
+   Buka terminal pada sistem Anda.
+
+2. **Jalankan Instalasi**
+   Salin dan tempel perintah berikut ini ke terminal Anda dan tekan Enter:
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/dulumina/RANIS/master/install_ranis.sh | bash
+
