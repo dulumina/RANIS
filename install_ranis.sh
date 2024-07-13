@@ -134,7 +134,7 @@ EOF
 
 # Membuat symbolic link untuk rains_scan
 echo "Creating symbolic link for rains_scan..."
-sudo ln -s /opt/ranis/RANIS-latest/rains_scan /usr/local/bin/rains_scan || { echo "Failed to create symbolic link for rains_scan. Instalasi dibatalkan."; rollback_installation; exit 1; }
+sudo ln -s /opt/ranis/RANIS-latest/ranis_scan /usr/local/bin/ranis_scan || { echo "Failed to create symbolic link for rains_scan. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 # Memulai service
 echo "Starting RANIS service..."
