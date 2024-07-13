@@ -10,7 +10,7 @@ prompt_input() {
         read -p "$prompt_message: " input_value
         if [ -z "$input_value" ]; then
             echo "$error_message. Instalasi dibatalkan."
-            sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis jika instalasi dibatalkan
+            rollback_installation
             exit 1
         else
             eval "$var_name=\"$input_value\""  # Assign input value to variable name
@@ -19,14 +19,25 @@ prompt_input() {
     done
 }
 
+# Function to rollback installation
+rollback_installation() {
+    echo "Rolling back installation..."
+    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis
+    sudo sed -i '/^export PATH="\/opt\/ranis\/RANIS-latest:$PATH"$/d' /etc/profile  # Hapus penambahan PATH
+    sudo systemctl stop ranis.service  # Stop service jika sudah dimulai
+    sudo systemctl disable ranis.service
+    sudo rm /etc/systemd/system/ranis.service  # Hapus unit service
+    sudo systemctl daemon-reload
+}
+
 # Step 1: Download file zip dari repository RANIS
 echo "Downloading RANIS from GitHub..."
-wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip
+wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip || { echo "Failed to download RANIS. Instalasi dibatalkan."; exit 1; }
 
 # Step 2: Ekstrak file zip ke folder /opt/ranis
 echo "Extracting files to /opt/ranis..."
 sudo mkdir -p /opt/ranis
-sudo unzip /tmp/ranis.zip -d /opt/ranis
+sudo unzip /tmp/ranis.zip -d /opt/ranis || { echo "Failed to extract RANIS. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 # Step 3: Buat file .env dan minta pengguna untuk mengisi nilai
 echo "Creating .env file..."
@@ -61,7 +72,7 @@ URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
 
 # Pesan yang akan dikirim
 MESSAGE="Silakan ketikkan angka berikut pada terminal untuk memverifikasi: $RANDOM_NUMBER"
-curl -o /dev/null -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE"
+curl -o /dev/null -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE" || { echo "Failed to send message to Telegram. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 echo "Memeriksa apakah bot Telegram berjalan..."
 echo "Menunggu konfirmasi..."
@@ -79,13 +90,11 @@ done
 
 # Step 5: Install aplikasi yang dibutuhkan
 echo "Installing inotify-tools..."
-sudo apt update
-sudo apt install -y inotify-tools
+sudo apt update && sudo apt install -y inotify-tools || { echo "Failed to install inotify-tools. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 # Install requirements Python dari RANIS
 echo "Installing Python requirements..."
-sudo apt install -y python3-pip
-sudo pip3 install -r /opt/ranis/RANIS-latest/requirements.txt
+sudo apt install -y python3-pip && sudo pip3 install -r /opt/ranis/RANIS-latest/requirements.txt || { echo "Failed to install Python requirements. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 # Step 6: Membuat service untuk monitor_changes.sh
 echo "Creating systemd service..."
@@ -107,11 +116,13 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+# Menambahkan rains_scan ke PATH
+echo "Adding rains_scan to PATH..."
+echo 'export PATH="/opt/ranis/RANIS-latest:$PATH"' | sudo tee -a /etc/profile || { echo "Failed to add rains_scan to PATH. Instalasi dibatalkan."; rollback_installation; exit 1; }
+
 # Memulai service
 echo "Starting RANIS service..."
-sudo systemctl daemon-reload
-sudo systemctl enable ranis.service
-sudo systemctl start ranis.service
+sudo systemctl daemon-reload && sudo systemctl enable ranis.service && sudo systemctl start ranis.service || { echo "Failed to start RANIS service. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 echo "Instalasi RANIS selesai!"
 echo "Anda dapat memantau status service dengan menjalankan: sudo systemctl status ranis.service"
