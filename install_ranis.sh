@@ -30,6 +30,12 @@ rollback_installation() {
     sudo systemctl daemon-reload
 }
 
+# Handle arguments
+if [ "$1" == "--remove" ]; then
+    rollback_installation
+    exit 0
+fi
+
 # Step 1: Download file zip dari repository RANIS
 echo "Downloading RANIS from GitHub..."
 wget https://github.com/dulumina/RANIS/archive/refs/tags/latest.zip -O /tmp/ranis.zip || { echo "Failed to download RANIS. Instalasi dibatalkan."; exit 1; }
