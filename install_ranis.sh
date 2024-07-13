@@ -52,7 +52,7 @@ echo "Silakan kirimkan angka berikut ke bot Telegram Anda:"
 
 # Generate random 4-digit number
 RANDOM_NUMBER=$(shuf -i 1000-9999 -n 1)
-echo "Angka untuk dikirim: $RANDOM_NUMBER"
+# echo "Angka untuk dikirim: $RANDOM_NUMBER"
 
 # Kirim pesan ke bot Telegram
 BOT_TOKEN="$TELEGRAM_TOKEN"
@@ -61,7 +61,7 @@ URL="https://api.telegram.org/bot$BOT_TOKEN/sendMessage"
 
 # Pesan yang akan dikirim
 MESSAGE="Silakan ketikkan angka berikut pada terminal untuk memverifikasi: $RANDOM_NUMBER"
-curl -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE"
+curl -o /dev/null -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MESSAGE"
 
 echo "Memeriksa apakah bot Telegram berjalan..."
 echo "Menunggu konfirmasi..."

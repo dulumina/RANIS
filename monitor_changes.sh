@@ -36,18 +36,26 @@ monitor_directory() {
             fi
         done
 
-        if [ "$action" != "DELETE" ]; then
-            echo "File $full_path telah $action"
-            # Ganti dengan path ke script Python yang akan dieksekusi
-            python3 ./file_monitoring.py "$full_path"
-        else
-            echo "File $full_path telah $action"
-            # Ganti dengan logika untuk pengiriman pesan ke Telegram saat file dihapus
-            current_time=$(date +"%Y-%m-%d %H:%M:%S")
-            message="File $full_path telah $action pada $current_time"
-            echo "$message"
-            send_telegram_message "$message"
-        fi
+        timestamp=$(date +"%Y%m%d")
+        log_file_path="logs/monitoring_${timestamp}.log"
+
+        current_time=$(date +"%Y-%m-%d %H:%M:%S")
+        message="File $full_path telah $action pada $current_time"
+        case $action in 
+            'CREATE' )
+                echo "$message"
+                python3 ./file_monitoring.py "$full_path"
+            ;;
+            'MODIFY' )
+                python3 ./file_monitoring.py "$full_path"
+            ;;
+            'DELETE' )
+                echo "$message" >> $log_file_path
+            ;;
+
+        esac
+
+
     done
 }
 
@@ -58,6 +66,7 @@ send_telegram_message() {
     data="chat_id=${CHAT_ID}&text=$(echo $message)"
     curl -s -X POST $url -d "$data" > /dev/null
 }
+
 
 # Call function to start monitoring
 monitor_directory

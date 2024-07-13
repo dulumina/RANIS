@@ -56,6 +56,8 @@ def send_telegram_message(message):
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python3 file_monitoring.py <file_to_scan>")
+        print("OR using executable")
+        print("Usage: rains_scan <file_to_scan>")
         sys.exit(1)
 
     file_to_scan = sys.argv[1]
