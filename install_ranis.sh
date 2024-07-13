@@ -22,12 +22,12 @@ prompt_input() {
 # Function to rollback installation
 rollback_installation() {
     echo "Rolling back installation..."
-    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis
-    sudo sed -i '/^export PATH="\/opt\/ranis\/RANIS-latest:$PATH"$/d' /etc/profile  # Hapus penambahan PATH
     sudo systemctl stop ranis.service  # Stop service jika sudah dimulai
     sudo systemctl disable ranis.service
     sudo rm /etc/systemd/system/ranis.service  # Hapus unit service
     sudo systemctl daemon-reload
+    sudo rm /usr/local/bin/rains_scan  # Hapus symbolic link
+    sudo rm -rf /opt/ranis  # Hapus folder /opt/ranis
 }
 
 # Function to handle SIGINT (Ctrl+C)
@@ -132,9 +132,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-# Menambahkan rains_scan ke PATH
-echo "Adding rains_scan to PATH..."
-echo 'export PATH="/opt/ranis/RANIS-latest:$PATH"' | sudo tee -a /etc/profile || { echo "Failed to add rains_scan to PATH. Instalasi dibatalkan."; rollback_installation; exit 1; }
+# Membuat symbolic link untuk rains_scan
+echo "Creating symbolic link for rains_scan..."
+sudo ln -s /opt/ranis/RANIS-latest/rains_scan /usr/local/bin/rains_scan || { echo "Failed to create symbolic link for rains_scan. Instalasi dibatalkan."; rollback_installation; exit 1; }
 
 # Memulai service
 echo "Starting RANIS service..."
