@@ -30,6 +30,16 @@ rollback_installation() {
     sudo systemctl daemon-reload
 }
 
+# Function to handle SIGINT (Ctrl+C)
+sigint_handler() {
+    echo "Received SIGINT. Rolling back installation..."
+    rollback_installation
+    exit 1
+}
+
+# Register SIGINT handler
+trap sigint_handler SIGINT
+
 # Handle arguments
 if [ "$1" == "--remove" ]; then
     rollback_installation
